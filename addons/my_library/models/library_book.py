@@ -45,8 +45,8 @@ class LibraryBook(models.Model):
                 continue
 
     def make_available(self):
-        #self.change_state('available')
-        self.change_state('draft') #Ning: this is a bug
+        self.change_state('available')
+        #self.change_state('draft') #Ning: this is a bug
 
     def make_borrowed(self):
         self.change_state('borrowed')

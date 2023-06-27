@@ -35,28 +35,56 @@ class Main(http.Controller):
             'submitted': post.get('submitted', False)
         })
     
-    @http.route('/books/submit_reservation', type='http', auth="user", website=True)
-    def books_reservation(self, **post):
+    @http.route('/books/submit_reservation', type='http', auth="user", website=True, methods=['POST',])
+    def books_reservation_post(self, **post):
+        error = ''
         if post.get('book_id'):
             book_id = int(post.get('book_id'))
             reservation_status = post.get('reservation_status')
             if book_id:
-                book = request.env['library.book'].sudo().search([('id','=',int(book_id))])
-                if book:
+                books = request.env['library.book'].sudo().search([('id','=',book_id)])
+                if len(books) > 0:
                     if reservation_status == 'available':
-                        book.make_available()
+                        books[0].make_available()
+                        if books[0].state != 'available':
+                            error = f'unable to change from {books[0].state} to "available"'
                     if reservation_status == 'borrowed':
-                        book.make_borrowed()
+                        books[0].make_borrowed()
+                        if books[0].state != 'borrowed':
+                            error = f'unable to change from {books[0].state} to "borrowed"'
                     if reservation_status == 'lost':
-                        book.make_lost()
-                    
-                    return request.redirect('/books/submit_reservation?submitted=1')
+                        books[0].make_lost()
+                        if books[0].state != 'lost':
+                            error = f'unable to change from {books[0].state} to "lost"'
+                    books[0].write({'state':books[0].state})
+                    if not error:
+                        return request.redirect(f'/books/submit_reservation?submitted=1&book_id={book_id}')
+
+        books = request.env['library.book'].search([])
+        if post.get('book_id'):
+            book_id = int(post.get('book_id'))
+            if book_id:
+                books = request.env['library.book'].sudo().search([('id','=',book_id)])
 
         return request.render('my_library.books_reservation_form', {
-            'books': request.env['library.book'].search([]),
-            'submitted': post.get('submitted', False)
+            'books': books,
+            'submitted': post.get('submitted', False),
+            'error': error,
+            'book_id': int(post.get('book_id'))
         })
         
+    @http.route('/books/submit_reservation', type='http', auth="user", website=True, methods=['GET',])
+    def books_reservation_gets(self, **post):
+        books = request.env['library.book'].search([])
+        if post.get('book_id'):
+            book_id = int(post.get('book_id'))
+            if book_id:
+                books = request.env['library.book'].sudo().search([('id','=',book_id)])
+        return request.render('my_library.books_reservation_form', {
+            'books': books,
+            'submitted': post.get('submitted', False),
+        })
+           
          
     @http.route('/movies', type='http', auth="user", website=True)
     def library_movies(self):
@@ -72,7 +100,7 @@ class Main(http.Controller):
                 'movie': movie,
             })
 
-    @http.route('/movies/submit_issues', type='http', auth="user", website=True)
+    @http.route('/movies/submit_reservation', type='http', auth="user", website=True)
     def movies_issues(self, **post):
         if post.get('movie_id'):
             movie_id = int(post.get('movie_id'))

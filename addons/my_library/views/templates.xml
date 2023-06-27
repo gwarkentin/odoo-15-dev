@@ -19,6 +19,9 @@
                         <t t-if="book.date_release">
                             <div t-field="book.date_release" class="text-muted"/>
                         </t>
+                        <t t-if="book.state">
+                            <div t-field="book.state"/>
+                        </t>
                         <b class="mt8"> Authors </b>
                         <ul>
                             <li t-foreach="book.author_ids" t-as="author">
@@ -60,6 +63,19 @@
                     <t t-if="book.date_release">
                         <div t-field="book.date_release" class="text-muted"/>
                     </t>
+                    <br />
+                    <t t-if="book.state">
+                        <div t-field="book.state" class="text-muted"/>
+                        <t t-if="book.state == 'Available'">
+                            <a t-attf-href="/books/submit_reservation?book_id=#{book.id}" class="btn btn-primary btn-sm">
+                            <i class="fa fa-book"/>Reserve Book</a>
+                        </t>
+                        <t t-else="">
+                            <a t-attf-href="/books/submit_reservation?book_id=#{book.id}" class="btn btn-primary btn-sm">
+                            <i class="fa fa-book"/>Update Book Status</a>
+                        </t>
+                    </t>
+                    <br />
                     <b class="mt8"> Authors </b>
                     <ul>
                         <li t-foreach="book.author_ids" t-as="author">
@@ -141,11 +157,15 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Book Status</label>
+                            <t t-if="error" class="warning"><div>Error: <t t-esc="error"></t></div></t>
+                            <label>Current Status: 
+                                <t t-esc="books[0].state"></t>
+                            </label>
                             <select class="form-control" name="reservation_status">
                                 <option value="available">Available</option>
-                                <option value="borrowed">Borrowed</option>
-                                <option value="lost">Lost</option>
+                                <option value="borrowed">borrowed</option>
+                                <option value="lost">lost</option>
+                                
                             </select>
                         </div>
                         <button type="submit" class="btn btn-primary">Submit</button>
